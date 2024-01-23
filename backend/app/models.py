@@ -35,7 +35,7 @@ class Images(models.Model):
         return self.description
 
     def get_absolute_url(self):
-        return reverse('image', kwargs={'image_slug': self.slug})
+        return reverse('image_edit', kwargs={'pk': self.pk})
 
     class Meta:
         verbose_name = 'Image'

@@ -45,18 +45,6 @@ def upload_images(request):
     return render(request, 'app/add_image.html', {'form': form})
 
 
-class ShowImage(DetailView):
-    model = Images
-    template_name = 'app/image.html'
-    slug_url_kwarg = 'image_slug'
-    context_object_name = 'im'
-
-    def get_context_data(self, **kwargs):
-        context = super(ShowImage, self).get_context_data(**kwargs)
-        context['title'] = 'Images'
-        return context
-
-
 class UpdateImage(LoginRequiredMixin, UpdateView):
     login_url = 'login'
     redirect_field_name = 'next'
@@ -64,6 +52,7 @@ class UpdateImage(LoginRequiredMixin, UpdateView):
     model = Images
     template_name = 'app/image_edit.html'
     fields = ['photo', 'description', 'slug']
+    success_url = '/'
 
     def get_object(self, queryset=None):
         obj = super().get_object(queryset=queryset)
@@ -71,8 +60,8 @@ class UpdateImage(LoginRequiredMixin, UpdateView):
             raise PermissionDenied
         return obj
 
-    def get_success_url(self):
-        return self.object.get_absolute_url()
+    # def get_success_url(self):
+    #     return self.object.get_absolute_url()
 
 
 class DeleteImage(LoginRequiredMixin, DeleteView):
@@ -81,7 +70,7 @@ class DeleteImage(LoginRequiredMixin, DeleteView):
 
     model = Images
     template_name = 'app/image_delete.html'
-    success_url = '/'
+    success_url = reverse_lazy('home')
 
     def get_object(self, queryset=None):
         obj = super().get_object(queryset=queryset)
