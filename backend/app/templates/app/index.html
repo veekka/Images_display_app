@@ -1,0 +1,118 @@
+{% extends 'app/base.html'%}
+{% load custom_filters %}
+{% load crispy_forms_tags %}
+{% block content %}
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+  var zoomableImages = document.querySelectorAll('.zoomable-image');
+  var enlargedImageOverlay = document.querySelector('.enlarged-image-overlay');
+  var currentEnlargedImage = null;
+
+  zoomableImages.forEach(function(image) {
+    image.addEventListener('click', function() {
+      if (currentEnlargedImage !== null) {
+        currentEnlargedImage.classList.remove('enlarged');
+        var imageDescription = currentEnlargedImage.querySelector('.image-description');
+        imageDescription.classList.add('hidden');
+      }
+
+      var imageContainer = this.parentNode;
+      imageContainer.classList.add('enlarged');
+      var imageDescription = imageContainer.querySelector('.image-description');
+      imageDescription.classList.remove('hidden');
+      enlargedImageOverlay.style.display = 'block';
+      document.body.style.overflow = 'hidden';
+
+      currentEnlargedImage = imageContainer;
+    });
+  });
+
+  enlargedImageOverlay.addEventListener('click', function() {
+    if (currentEnlargedImage !== null) {
+      currentEnlargedImage.classList.remove('enlarged');
+      var imageDescription = currentEnlargedImage.querySelector('.image-description');
+      imageDescription.classList.add('hidden');
+      enlargedImageOverlay.style.display = 'none';
+      document.body.style.overflow = '';
+      currentEnlargedImage = null;
+    }
+  });
+});
+</script>
+<a href="{% url 'add_image' %}" class="btn btn-lg" style="background-color: #f2eceb;margin-left: 200px;margin-bottom: 20px;">Upload image</a>
+<div class="form-search">
+<form method="GET" action="{% url 'homeD' %}">
+  <input class="text-field" type="text" name="search" value="{{ search_query }}" placeholder="Search by author of image">
+  <input type="date" name="start_date" value="{{ date_query }}">
+    <input type="date" name="end_date" value="{{ date_query }}">
+  <button type="submit">Submit</button>
+</form>
+</div>
+
+
+{% if object_list %}
+
+<div class="images-grid" style="display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3, 370px); margin-left:140px; margin-right:105px;">
+        {% for image in object_list %}
+            <div class="image-container" id="image-{{ forloop.counter }}">
+                <img class="zoomable-image" src="{{ image.photo.url }}" alt="Image" style="width:400px;height:350px;">
+                <div class="image-description hidden">
+                    <p>Description: {{ image.description }}; </p>
+                    <p>Image size: {{ image.image_size }}</p>
+                    <p>Dominant color: </p>
+                    <div id="circle_dim_color" style="background: {{ image.dominant_color }}"></div>
+                    <p>Average color:</p>
+                    <div id="circle_aver_color" style="background: {{ image.average_color }}"></div>
+                    <p>Image palette:</p>
+                    <div class="row">
+                        {% for item in image.image_palette|split_string:", " %}
+                            <div id="circle_palette" style="background: {{ item|slice:'1:-1'|remove_quotes }}"></div>
+                        {% endfor %}
+                    </div>
+                    <div class="button-position">
+                        {% if request.user == image.user %}
+                            <a href="{% url 'image_edit' image.pk %}" class="btn btn-sm" style="background-color: #f2eceb;margin-top:0px;">Edit</a>
+                            <a href="{% url 'image_delete' image.pk %}" class="btn btn-sm" style="background-color: #f2eceb;margin-top:0px;">Delete</a>
+                        {% else %}
+                        <p></p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+        {% endfor %}
+    </div>
+<div class="enlarged-image-overlay">
+    <div class="non-standart"></div>
+</div>
+{% else %}
+    <p>No photos found.</p>
+{% endif %}
+
+<nav class="pagination" >
+    <ul>
+        {% if page_obj.has_previous %}
+            <li class="page-num">
+                <a href="?page={{ page_obj.previous_page_number }}">&lt;</a>
+            </li>
+        {% endif %}
+
+            {% for p in paginator.page_range %}
+                {% if page_obj.number == p %}
+                     <li class="list-pages page-num-selected">{{ p }}</li>
+                {% elif p >= page_obj.number|add:-2 and p <= page_obj.number|add:2 %}
+                    <li class="page-num">
+                        <a href="?page={{ p }}">{{ p }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        {% if page_obj.has_next %}
+            <li class="page-num">
+                <a href="?page={{ page_obj.next_page_number }}">&gt;</a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+
+{% endblock %}

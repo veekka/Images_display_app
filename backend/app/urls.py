@@ -10,6 +10,6 @@ urlpatterns = [
     path('register/', RegisterUser.as_view(), name="register"),
     path('password_change/', UserPasswordChange.as_view(), name='password_change'),
     path('', ImagesApp.as_view(), name='home'),
-    #path('image/<slug:image_slug>/', ShowImage.as_view(), name='image'),
-    #path('', AppHome.as_view(), name='home'),
+    path('image/<int:pk>/', ShowImage.as_view(), name='image'),
+    path('home/', AppHome.as_view(), name='homeD'),
 ]

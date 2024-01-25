@@ -30,6 +30,37 @@ class ImagesApp(ListView):
         return context
 
 
+class AppHome(ListView):
+    model = Images
+    template_name = 'app/index.html'
+    paginate_by = 9
+
+    def get_queryset(self):
+        search_query = self.request.GET.get('search')
+        start_date = self.request.GET.get('start_date')
+        end_date = self.request.GET.get('end_date')
+        queryset = super().get_queryset()
+
+        if search_query and start_date and end_date:
+            queryset = queryset.filter(
+                Q(user__username=search_query) & Q(time_create__date__range=[start_date, end_date])
+            )
+        elif search_query:
+            queryset = queryset.filter(user__username=search_query)
+        elif start_date and end_date:
+            queryset = queryset.filter(time_create__date__range=[start_date, end_date])
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super(AppHome, self).get_context_data(**kwargs)
+        context['title'] = 'Images'
+        context['search_query'] = self.request.GET.get('search', '')
+        context['start_date'] = self.request.GET.get('start_date', '')
+        context['end_date'] = self.request.GET.get('end_date', '')
+        return context
+
+
 @login_required(login_url='login')
 def upload_images(request):
     if request.method == 'POST':
@@ -43,6 +74,18 @@ def upload_images(request):
         form = AddImageForm
 
     return render(request, 'app/add_image.html', {'form': form})
+
+class ShowImage(DetailView):
+    model = Images
+    template_name = 'app/image.html'
+    slug_url_kwarg = 'image_slug'
+    context_object_name = 'im'
+
+    def get_context_data(self, **kwargs):
+        context = super(ShowImage, self).get_context_data(**kwargs)
+        context['title'] = 'Images'
+        return context
+
 
 
 class UpdateImage(LoginRequiredMixin, UpdateView):
